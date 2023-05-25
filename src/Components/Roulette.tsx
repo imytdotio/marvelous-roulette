@@ -1,16 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import ShareButton from "./ShareButton";
 
 interface InputField {
   id: number;
   value: string;
 }
 
+const deserializeFields = (fieldsString: string) => {
+  return fieldsString.split(",").map((value, id) => ({ id, value }));
+};
+
+const useUrlFields = (initialFields: InputField[]) => {
+  const [fields, setFields] = useState<InputField[]>(initialFields);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlFields = params.get("fields");
+    if (urlFields) {
+      setFields(deserializeFields(urlFields));
+    }
+  }, []);
+
+  return [fields, setFields] as const;
+};
+
 const Roulette: React.FC = () => {
-  const [fields, setFields] = useState<InputField[]>([
+  const initialFields = [
     { id: 0, value: "" },
     { id: 1, value: "" },
     { id: 2, value: "" },
-  ]);
+  ];
+  const [fields, setFields] = useUrlFields(initialFields);
   const [selectedField, setSelectedField] = useState<number | null>(null);
   const [result, setResult] = useState<string | null>(null);
 
@@ -34,7 +54,7 @@ const Roulette: React.FC = () => {
       const totalRunTime = 1500; // 1.5 seconds
       const totalFields = fields.length * 6; // Ensure running through fields more than once
       const timePerField = totalRunTime / totalFields;
-      
+
       const intervalId = setInterval(() => {
         setSelectedField(fields[index % fields.length].id);
         index++;
@@ -61,7 +81,9 @@ const Roulette: React.FC = () => {
             <input
               type="text"
               value={field.value}
-              className={`rounded-md p-4 border-2 border-white bg-white ${selectedField === field.id ? "border-2 border-blue-600" : ""}`}
+              className={`rounded-md p-4 border-2 bg-white ${
+                selectedField === field.id ? "border-blue-600" : "border-white"
+              }`}
               onChange={(e) => handleChange(e, field.id)}
             />
             <button onClick={deleteField(field.id)}>🗑️</button>
@@ -80,7 +102,12 @@ const Roulette: React.FC = () => {
       >
         ✨ Decide
       </button>
-      {result && <div className="text-center font-bold py-4 text-xl">{result} is picked</div>}
+      {result && (
+        <div className="text-center font-bold py-4 text-xl">
+          {result} is picked
+        </div>
+      )}
+      <ShareButton fields={fields} setFields={setFields} />
     </div>
   );
 };
