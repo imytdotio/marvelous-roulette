@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 interface InputField {
   id: number;
@@ -13,6 +13,11 @@ interface ShareButtonProps {
 const serializeFields = (fields: InputField[]) => {
   return fields.map((field) => field.value).join(",");
 };
+
+interface Message {
+  type: "success" | "error";
+  message: string;
+}
 
 const ShareButton: React.FC<ShareButtonProps> = ({ fields, setFields }) => {
   const handleShare = () => {
@@ -30,20 +35,34 @@ const ShareButton: React.FC<ShareButtonProps> = ({ fields, setFields }) => {
     navigator.clipboard
       .writeText(newUrl)
       .then(() => {
-        console.log("URL copied to clipboard");
+        setMessage({ type: "success", message: "Copied to clipboard!" });
       })
       .catch((err) => {
-        console.log("Something went wrong", err);
+        setMessage({
+          type: "error",
+          message: "Copied to clipboard!" + err.message,
+        });
       });
   };
 
+  const [message, setMessage] = useState<Message | null>(null);
+
   return (
-    <button
-      onClick={handleShare}
-      className="mb-2 bg-white border-2 border-slate-200 hover:shadow-sm duration-200 w-full py-4 rounded-md"
-    >
-      Share Roulette
-    </button>
+    <>
+      <button
+        onClick={handleShare}
+        className="bg-white border-2 border-slate-200 hover:shadow-sm duration-200 w-full py-4 rounded-md"
+      >
+        Share Roulette
+      </button>
+      <p
+        className={`text-center ${
+          message?.type == "success" ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        {message && message.message}
+      </p>
+    </>
   );
 };
 
